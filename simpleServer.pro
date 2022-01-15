@@ -8,6 +8,8 @@ CONFIG += c++11
 
 SOURCES += \
         chatserver.cpp \
+        infodisplay.cpp \
+        listconnexion.cpp \
         main.cpp \
         serverworker.cpp
 
@@ -26,4 +28,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     chatserver.h \
+    infodisplay.h \
+    listconnexion.h \
     serverworker.h

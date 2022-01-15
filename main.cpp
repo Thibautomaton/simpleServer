@@ -2,6 +2,8 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include "chatserver.h"
+#include "infodisplay.h"
+#include <listconnexion.h>
 
 int main(int argc, char *argv[])
 {
@@ -11,11 +13,19 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    ChatServer server;
+
+
+    ListConnexion* notSignedInUsers = new ListConnexion();
+    ListConnexion* connectedusers = new ListConnexion();
+
+    InfoDisplay serverInterface(notSignedInUsers, connectedusers);
 
     QQmlApplicationEngine engine;
 
-    engine.rootContext()->setContextProperty("Server", &server);
+    engine.rootContext()->setContextProperty("server", &serverInterface);
+    engine.rootContext()->setContextProperty("NotSignedInUsers", notSignedInUsers);
+    engine.rootContext()->setContextProperty("ConnectedUsers", connectedusers);
+
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {

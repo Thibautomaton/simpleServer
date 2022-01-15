@@ -18,21 +18,15 @@ Window {
             anchors.top: parent.top
             anchors.margins: 50
             spacing : 100
-            Column {
 
+            Column {
                 spacing: 25
+
 
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.margins: 50
 
                 //we receive the ip adresses as a Qlist<QString>, ListView can display
-
-                ListView {
-                    model: ipadresses.count
-                    delegate: Text{
-                        text : "- " + ipadresses.get(index)
-                    }
-                }
 
                 Button {
                     id: startButton
@@ -43,7 +37,7 @@ Window {
                     padding: 5
 
                     onClicked: {
-                        Server.toggleStartServer()
+                        server.toggleStart()
                     }
                 }
 
@@ -51,6 +45,10 @@ Window {
                     id:loggedUsers
                     text: "Usernames :"
                     color: "lightgreen"
+                }
+
+                PanelL {
+
                 }
             }
 
@@ -77,25 +75,23 @@ Window {
                     text : "Unaccepted Incomming connexions :"
                     color: "red"
                 }
+
+                PanelR {
+
+                }
             }
         }
     }
 
     Connections {
-        target: Server
+        target: server
         function onServerStarted() {
             connexionLight.opacity = 1;
         }
-        function onServerStopped() {
-            connexionLight.opacity = 0.3;
-        }
-        function onNewClientConnected() {
-            unacceptedConnexions.text +="\n- anonyme";
-        }
-        function onNewUserIdentified(user){
-            unacceptedConnexions.text = unacceptedConnexions.text.slice(0, -11);
-            loggedUsers.text += "\n- "+user;
-        }
+//        function onServerStopped() {
+//            connexionLight.opacity = 0.3;
+//        }
+
     }
 
 

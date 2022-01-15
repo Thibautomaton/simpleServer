@@ -9,7 +9,7 @@
 class ChatServer : public QTcpServer
 {
     Q_OBJECT
-    Q_DISABLE_COPY(ChatServer)
+    //Q_DISABLE_COPY(ChatServer)
 public:
     explicit ChatServer(QObject *parent = nullptr);
     Q_INVOKABLE void toggleStartServer();
@@ -20,8 +20,10 @@ signals:
     void logMessage(const QString &msg);
     void serverStarted();
     void serverStopped();
-    void newClientConnected();
-    void newUserIdentified(QString);
+    void newClientConnected(QString ip, int port);
+    void newUserIdentified(QString ip, int port, QString username);
+    void disconnectUserUI(QString username);
+
 public slots:
     void stopServer();
 private slots:
@@ -29,7 +31,6 @@ private slots:
     void jsonReceived(ServerWorker *sender, const QJsonObject &doc);
     void userDisconnected(ServerWorker *sender);
     void userError(ServerWorker *sender);
-
 
 private:
     void jsonFromLoggedOut(ServerWorker *sender, const QJsonObject &doc);

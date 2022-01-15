@@ -1,11 +1,9 @@
 #include "chatserver.h"
+#include <QString>
 
 ChatServer::ChatServer(QObject *parent) : QTcpServer(parent)
 {
-
     //get the signals from the ui to launch server and verifiy if it is listening
-
-
 }
 
 void ChatServer::incomingConnection(qintptr socketDescriptor)
@@ -33,7 +31,7 @@ void ChatServer::incomingConnection(qintptr socketDescriptor)
 
   // we log the event
   emit logMessage(QStringLiteral("New client Connected"));
-  emit newClientConnected();
+  emit newClientConnected(m_clients.last()->getPeerAdress().toString(), m_clients.last()->getPeerPort());
 }
 
 //void ChatServer::informConnectionStatus(ServerWorker *destination)
@@ -97,6 +95,8 @@ void ChatServer::userDisconnected(ServerWorker *sender)
         QJsonObject disconnectedMessage;
         disconnectedMessage[QStringLiteral("type")] = QStringLiteral("userdisconnected");
         disconnectedMessage[QStringLiteral("username")] = userName;
+        emit disconnectUserUI(userName);
+
         broadcast(disconnectedMessage, nullptr);
         emit logMessage(userName + QLatin1String(" disconnected"));
     }
@@ -111,7 +111,6 @@ void ChatServer::userError(ServerWorker *sender)
 
 void ChatServer::toggleStartServer()
 {
-
     //QHostAddress ipAddress = QHostAddress(ip);
 
     if (this->isListening()) {
@@ -148,7 +147,7 @@ void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonObject &docO
         return;
     const QJsonValue usernameVal = docObj.value(QLatin1String("username"));
     const QJsonValue passwordVal = docObj.value(QLatin1String("text"));
-    qDebug()<<passwordVal.toString();
+    qDebug()<<usernameVal.toString();
     if (usernameVal.isNull() || !usernameVal.isString())
         return;
     const QString newUserName = usernameVal.toString().simplified();
@@ -189,21 +188,28 @@ void ChatServer::jsonFromLoggedOut(ServerWorker *sender, const QJsonObject &docO
          return;
      }
 
+    qDebug()<<"Received Login message";
+
+    //TODO: rajouter les messages qui specifient que le message de login peut fonctionner une fois et la condition dans le worker.
+    //peut-être ordonner les workers s'ils sont actuellement connectés ou pas ?
+    //send back json with success=true, pour updater le statut du client en logged in
+
     sender->setUserName(newUserName);
     QJsonObject successMessage;
     successMessage[QStringLiteral("type")] = QStringLiteral("login");
     successMessage[QStringLiteral("success")] = true;
     sendJson(sender, successMessage);
+    emit newUserIdentified(sender->getPeerAdress().toString(), sender->getPeerPort(), newUserName);
     QJsonObject connectedMessage;
     connectedMessage[QStringLiteral("type")] = QStringLiteral("newuser");
     connectedMessage[QStringLiteral("username")] = newUserName;
     broadcast(connectedMessage, sender);
-
 }
 
 
 void ChatServer::jsonFromLoggedIn(ServerWorker *sender, const QJsonObject &docObj)
 {
+    qDebug()<<"display debug";
     Q_ASSERT(sender);
     const QJsonValue typeVal = docObj.value(QLatin1String("type"));
     if (typeVal.isNull() || !typeVal.isString())
@@ -218,13 +224,15 @@ void ChatServer::jsonFromLoggedIn(ServerWorker *sender, const QJsonObject &docOb
         QString user = sender->userName();
         for(QMap<QString, QString>::iterator it = m_agreedUsers.begin(); it!=  m_agreedUsers.end(); it++)
         {
+            qDebug()<<"iterate";
             if(it.key()==user)
             {
+                qDebug()<<"user";
                 const QJsonValue textVal = docObj.value(QLatin1String("text"));
                 if(it.value()==textVal.toString())
                 {
                     qDebug()<<"logged in";
-                    emit newUserIdentified(user);
+                    emit newUserIdentified(sender->getPeerAdress().toString(), sender->getPeerPort(), user);
                 }
             }
             else {
@@ -247,7 +255,6 @@ void ChatServer::jsonFromLoggedIn(ServerWorker *sender, const QJsonObject &docOb
 
     if(message[QStringLiteral("type")]== QStringLiteral("login"))
     {
-
         exit(-1);
     }
 
